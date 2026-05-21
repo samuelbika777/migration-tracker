@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a1628">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AU Migration">
+<title>AU Migration Tracker v2 — Bika Family</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a1628; --bg2:#0f1e38; --bg3:#162544;
+  --card:#1a2d50; --card2:#1f3560; --border:#2a4070;
+  --teal:#10b981; --teal-dim:#065f46;
+  --amber:#f59e0b; --amber-dim:#78350f;
+  --coral:#ef4444; --coral-dim:#7f1d1d;
+  --purple:#8b5cf6; --purple-dim:#4c1d95;
+  --sky:#38bdf8; --sky-dim:#0c4a6e;
+  --gold:#fbbf24;
+  --text:#e2e8f0; --text2:#94a3b8; --text3:#64748b;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+.app-header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 14px) 20px 14px}
+.header-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.header-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-0.3px}
+.header-sub{font-size:12px;color:var(--text2);margin-top:2px;font-weight:300}
+.header-badge{background:var(--teal-dim);border:1px solid var(--teal);color:var(--teal);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;font-family:'Syne',sans-serif;flex-shrink:0;margin-top:2px}
+
+/* ── OVERALL PROGRESS ── */
+.overall-card{margin:16px 16px 0;background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden}
+.overall-card::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(16,185,129,0.12) 0%,transparent 70%);pointer-events:none}
+.overall-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.overall-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
+.overall-pct{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#fff;line-height:1}
+.overall-pct span{font-size:16px;color:var(--text2);font-weight:400}
+.bar-track{background:var(--bg);border-radius:10px;height:10px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--teal) 0%,var(--sky) 100%);transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);position:relative}
+.bar-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:20px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));border-radius:10px}
+.overall-stats{display:flex;gap:0;margin-top:14px}
+.stat-item{flex:1;text-align:center;padding:0 8px;border-right:1px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.stat-num.done{color:var(--teal)} .stat-num.prog{color:var(--amber)} .stat-num.todo{color:var(--text3)} .stat-num.spent-col{color:var(--gold)}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* ── SPENT CARD ── */
+.spent-card{margin:12px 16px 0;background:linear-gradient(135deg,#1a2010 0%,#1f2d14 100%);border:1px solid #3d6b2a;border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.spent-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(251,191,36,0.1) 0%,transparent 70%);pointer-events:none}
+.spent-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.spent-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:#86a86e;text-transform:uppercase;letter-spacing:1px}
+.currency-toggle{display:flex;background:var(--bg);border-radius:20px;overflow:hidden;border:1px solid var(--border)}
+.curr-btn{padding:4px 12px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all 0.2s}
+.curr-btn.active{background:var(--gold);color:#000}
+.spent-amounts{display:flex;gap:16px;align-items:flex-end;margin-bottom:12px}
+.spent-primary{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--gold);line-height:1}
+.spent-secondary{font-family:'Syne',sans-serif;font-size:14px;font-weight:500;color:#86a86e;line-height:1;padding-bottom:3px}
+.spent-bar-track{background:var(--bg);border-radius:8px;height:6px;overflow:hidden}
+.spent-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),#f97316);transition:width 0.6s ease}
+.spent-subtext{font-size:11px;color:#86a86e;margin-top:6px}
+
+/* ── FILTER TABS ── */
+.filter-row{display:flex;gap:8px;padding:14px 16px 0;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s}
+.filter-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+
+/* ── PHASE CARDS ── */
+.phases{padding:14px 16px 120px;display:flex;flex-direction:column;gap:12px}
+.phase-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all 0.3s ease}
+.phase-card.collapsed .phase-steps{display:none}
+.phase-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.phase-num{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;flex-shrink:0}
+.phase-info{flex:1;min-width:0}
+.phase-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phase-dates{font-size:11px;color:var(--text3);margin-top:2px;font-style:italic}
+.phase-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.phase-pct-txt{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.phase-mini-bar{width:60px;height:4px;background:var(--bg);border-radius:4px;overflow:hidden}
+.phase-mini-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
+.chevron{font-size:10px;color:var(--text3);margin-left:4px;transition:transform 0.3s}
+.phase-card:not(.collapsed) .chevron{transform:rotate(180deg)}
+.ph1{--pc:#38bdf8;--pd:#0c4a6e} .ph2{--pc:#10b981;--pd:#065f46} .ph3{--pc:#f59e0b;--pd:#78350f}
+.ph4{--pc:#10b981;--pd:#065f46} .ph5{--pc:#8b5cf6;--pd:#4c1d95} .ph6{--pc:#ef4444;--pd:#7f1d1d} .ph7{--pc:#10b981;--pd:#065f46}
+.phase-num{background:var(--pd);color:var(--pc)}
+.phase-pct-txt{color:var(--pc)}
+.phase-mini-fill{background:var(--pc)}
+.psp-done{background:var(--teal-dim);color:var(--teal)} .psp-active{background:var(--amber-dim);color:var(--amber)} .psp-locked{background:#1e293b;color:var(--text3)}
+.phase-status-pill{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;font-family:'Syne',sans-serif}
+
+/* ── STEP ITEMS ── */
+.phase-steps{border-top:1px solid var(--border);padding:8px 0 4px}
+.step-item{display:flex;align-items:flex-start;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.15s;position:relative}
+.step-item:active{background:var(--bg3)}
+.step-item+.step-item{border-top:1px solid rgba(42,64,112,0.5)}
+.step-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);margin-top:1px}
+.step-check svg{display:none}
+.step-item.done .step-check{background:var(--teal);border-color:var(--teal)}
+.step-item.done .step-check svg{display:block}
+.step-item.in-progress .step-check{border-color:var(--amber);background:var(--amber-dim)}
+.step-item.in-progress .step-check::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:13.5px;font-weight:500;color:var(--text);line-height:1.35}
+.step-item.done .step-title{color:var(--text3);text-decoration:line-through;text-decoration-color:var(--teal-dim)}
+.step-meta{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
+.who-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;font-family:'Syne',sans-serif;letter-spacing:0.3px}
+.who-you{background:#1e3a5f;color:var(--sky)} .who-family{background:#422006;color:var(--amber)} .who-all{background:#064e3b;color:var(--teal)}
+.cost-tag{font-size:10px;color:var(--teal);font-weight:500}
+.status-tag{font-size:10px;padding:1px 6px;border-radius:5px;font-weight:600}
+.st-done{background:var(--teal-dim);color:var(--teal)} .st-progress{background:var(--amber-dim);color:var(--amber)} .st-todo{background:#1e293b;color:var(--text3)}
+.date-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--teal);background:var(--teal-dim);border:1px solid rgba(16,185,129,0.3);border-radius:5px;padding:1px 7px;font-weight:500;margin-top:4px}
+.date-badge svg{flex-shrink:0}
+.deadline-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);border-radius:5px;padding:1px 7px;font-weight:600;margin-top:4px;font-family:'Syne',sans-serif;}
+
+/* ── MODAL DATE PICKER ── */
+.modal-date-row{margin-bottom:18px}
+.modal-date-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;font-family:'Syne',sans-serif}
+.modal-date-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--teal);font-size:15px;font-family:'Syne',sans-serif;font-weight:600;padding:10px 14px;appearance:none;-webkit-appearance:none}
+.modal-date-input:focus{outline:none;border-color:var(--teal);background:var(--bg2)}
+.modal-date-input::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) saturate(3) hue-rotate(100deg);cursor:pointer}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;padding:10px 0 calc(var(--safe-bot) + 10px);z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;color:var(--text3);transition:color 0.2s;font-size:10px;font-weight:500;font-family:'Syne',sans-serif;border:none;background:none}
+.nav-item.active{color:var(--teal)}
+.nav-icon{font-size:20px;line-height:1}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal-sheet{background:var(--bg2);border-radius:24px 24px 0 0;border:1px solid var(--border);padding:20px 20px calc(var(--safe-bot) + 24px);width:100%;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:6px}
+.modal-detail{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px}
+.modal-cost{display:inline-block;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;margin-bottom:14px}
+.modal-explanation{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.modal-explanation-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.modal-explanation-body{font-size:13px;color:var(--text2);line-height:1.75}
+.modal-explanation-body p{margin-bottom:8px}
+.modal-explanation-body p:last-child{margin-bottom:0}
+.modal-explanation-body strong{color:var(--text);font-weight:600}
+.modal-actions{display:flex;gap:10px}
+.btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-danger{background:var(--coral-dim);color:var(--coral);border:1px solid var(--coral)}
+
+/* ── CONFETTI ── */
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:300;display:none}
+.confetti-wrap.show{display:block}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.2s ease-in forwards}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ── COSTS VIEW ── */
+.cost-view-wrap{padding:0 16px 120px}
+.cost-config-bar{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin:16px 0 8px;display:flex;flex-direction:column;gap:10px}
+.config-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.config-label{font-size:13px;color:var(--text2);font-weight:500}
+.rate-input-wrap{display:flex;align-items:center;gap:6px}
+.rate-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;font-weight:600;padding:5px 10px;width:100px;text-align:right}
+.rate-input:focus{outline:none;border-color:var(--teal)}
+.rate-label{font-size:12px;color:var(--text3)}
+.cost-section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:18px 0 8px}
+.cost-section-title:first-child{margin-top:0}
+.cost-row-card{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.cost-row-top{display:flex;justify-content:space-between;align-items:center;padding:11px 14px 8px}
+.cost-item-name{font-size:13px;color:var(--text);flex:1;padding-right:10px}
+.cost-est{font-size:12px;font-weight:500;color:var(--text3);white-space:nowrap}
+.cost-row-input{padding:0 14px 12px;display:flex;align-items:center;gap:8px}
+.actual-label{font-size:11px;color:var(--text3);white-space:nowrap;font-weight:500}
+.curr-prefix{font-size:12px;font-weight:700;font-family:'Syne',sans-serif;color:var(--gold);background:var(--bg3);border:1px solid var(--border);border-radius:7px 0 0 7px;padding:6px 9px;border-right:none;white-space:nowrap}
+.actual-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:0 7px 7px 0;color:var(--gold);font-size:14px;font-family:'Syne',sans-serif;font-weight:600;padding:6px 10px;min-width:0}
+.actual-input:focus{outline:none;border-color:var(--gold);background:var(--bg2)}
+.actual-input::placeholder{color:var(--text3);font-weight:400}
+.converted-val{font-size:11px;color:var(--text3);font-style:italic;margin-left:2px;white-space:nowrap}
+.cost-total-card{background:linear-gradient(135deg,#1a2010,#1f2d14);border:1px solid #3d6b2a;border-radius:14px;padding:16px;margin-top:16px}
+.cost-total-header{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#86a86e;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.cost-total-rows{display:flex;flex-direction:column;gap:8px}
+.cost-total-row{display:flex;justify-content:space-between;align-items:center}
+.cost-total-row-label{font-size:13px;color:var(--text2)}
+.cost-total-row-val{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--gold)}
+.cost-divider{height:1px;background:rgba(61,107,42,0.5);margin:4px 0}
+.cost-grand-total{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.cost-grand-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff}
+.cost-grand-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.cost-budget-row{margin-top:10px}
+.budget-bar-track{background:var(--bg);border-radius:8px;height:8px;overflow:hidden;margin-top:6px}
+.budget-bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),#f97316);transition:width 0.6s ease}
+.budget-note{font-size:11px;color:#86a86e;margin-top:5px}
+
+/* ── NOTES VIEW ── */
+.notes-wrap{padding:16px 16px 120px}
+
+/* ── VIEWS ── */
+.main-view{display:block} .main-view.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">🇦🇺 AU Migration</div>
+      <div class="header-sub">Bika Family · IELTS Jul 2026 · OPRA Nov 2026 · Arr. Sep–Dec 2027</div>
+    </div>
+    <div class="header-badge" id="overall-badge">0% Complete</div>
+  </div>
+</div>
+
+<!-- ══ TRACKER VIEW ══ -->
+<div class="main-view" id="view-tracker">
+
+  <div class="overall-card">
+    <div class="overall-top">
+      <div class="overall-label">Overall Progress</div>
+      <div class="overall-pct"><span id="pct-num">0</span><span>%</span></div>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="main-bar" style="width:0%"></div>
+    </div>
+    <div class="overall-stats">
+      <div class="stat-item"><div class="stat-num done" id="stat-done">0</div><div class="stat-lbl">Done</div></div>
+      <div class="stat-item"><div class="stat-num prog" id="stat-prog">0</div><div class="stat-lbl">Active</div></div>
+      <div class="stat-item"><div class="stat-num todo" id="stat-todo">0</div><div class="stat-lbl">Pending</div></div>
+    </div>
+  </div>
+
+  <!-- SPENT SUMMARY CARD -->
+  <div class="spent-card">
+    <div class="spent-top">
+      <div class="spent-label">💸 Total Spent So Far</div>
+      <div class="currency-toggle">
+        <button class="curr-btn active" id="tracker-aud-btn" onclick="setTrackerCurr('AUD')">AUD</button>
+        <button class="curr-btn" id="tracker-ngn-btn" onclick="setTrackerCurr('NGN')">NGN</button>
+      </div>
+    </div>
+    <div class="spent-amounts">
+      <div class="spent-primary" id="spent-primary">AUD 0</div>
+      <div class="spent-secondary" id="spent-secondary">≈ NGN 0</div>
+    </div>
+    <div class="spent-bar-track">
+      <div class="spent-bar-fill" id="spent-bar" style="width:0%"></div>
+    </div>
+    <div class="spent-subtext" id="spent-subtext">of estimated AUD 19,000 minimum · Enter actuals in Costs tab</div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterSteps('all',this)">All Steps</button>
+    <button class="filter-btn" onclick="filterSteps('todo',this)">Pending</button>
+    <button class="filter-btn" onclick="filterSteps('in-progress',this)">Active</button>
+    <button class="filter-btn" onclick="filterSteps('done',this)">Completed</button>
+  </div>
+
+  <div class="phases" id="phases-container"></div>
+</div>
+
+<!-- ══ COSTS VIEW ══ -->
+<div class="main-view hidden" id="view-costs">
+  <div class="cost-view-wrap">
+
+    <div class="cost-config-bar">
+      <div class="config-row">
+        <span class="config-label">Display currency</span>
+        <div class="currency-toggle">
+          <button class="curr-btn active" id="cost-aud-btn" onclick="setCostCurr('AUD')">AUD</button>
+          <button class="curr-btn" id="cost-ngn-btn" onclick="setCostCurr('NGN')">NGN</button>
+        </div>
+      </div>
+      <div class="config-row">
+        <span class="config-label">Exchange rate</span>
+        <div class="rate-input-wrap">
+          <span class="rate-label">1 AUD =</span>
+          <input class="rate-input" type="number" id="rate-input" value="1650" min="1" oninput="onRateChange()">
+          <span class="rate-label">NGN</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="cost-items-container"></div>
+
+    <div class="cost-total-card" id="cost-total-card">
+      <div class="cost-total-header">📊 Spending Summary</div>
+      <div class="cost-total-rows">
+        <div class="cost-total-row">
+          <span class="cost-total-row-label">Fixed gov/regulatory fees</span>
+          <span class="cost-total-row-val" id="tot-fixed">—</span>
+        </div>
+        <div class="cost-total-row">
+          <span class="cost-total-row-label">Visa fees (family of 4)</span>
+          <span class="cost-total-row-val" id="tot-visa">—</span>
+        </div>
+        <div class="cost-total-row">
+          <span class="cost-total-row-label">Variable / optional</span>
+          <span class="cost-total-row-val" id="tot-variable">—</span>
+        </div>
+        <div class="cost-divider"></div>
+        <div class="cost-grand-total">
+          <span class="cost-grand-label">Total Spent</span>
+          <span class="cost-grand-val" id="tot-grand">AUD 0</span>
+        </div>
+      </div>
+      <div class="cost-budget-row">
+        <div class="cost-total-row">
+          <span style="font-size:12px;color:#86a86e;">vs. estimated minimum (AUD 19,000)</span>
+          <span style="font-size:12px;color:var(--gold);font-weight:700;" id="tot-pct-lbl">0%</span>
+        </div>
+        <div class="budget-bar-track">
+          <div class="budget-bar-fill" id="budget-bar" style="width:0%"></div>
+        </div>
+        <div class="budget-note" id="budget-note">Enter actual amounts above to track spending</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ NOTES VIEW ══ -->
+<div class="main-view hidden" id="view-notes">
+  <div class="notes-wrap">
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#fff;margin-bottom:16px;">⚠️ Critical Rules</div>
+    <div id="notes-list"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-tracker" onclick="switchView('tracker')">
+    <span class="nav-icon">📋</span>Tracker
+  </button>
+  <button class="nav-item" id="nav-costs" onclick="switchView('costs')">
+    <span class="nav-icon">💰</span>Costs
+  </button>
+  <button class="nav-item" id="nav-notes" onclick="switchView('notes')">
+    <span class="nav-icon">⚠️</span>Warnings
+  </button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-detail" id="modal-detail"></div>
+    <div class="modal-cost" id="modal-cost"></div>
+    <div class="modal-explanation" id="modal-explanation" style="display:none">
+      <div class="modal-explanation-title">📖 What you need to do</div>
+      <div class="modal-explanation-body" id="modal-explanation-body"></div>
+    </div>
+    <div class="modal-date-row" id="modal-date-row" style="display:none">
+      <div class="modal-date-label">📅 Date completed</div>
+      <input type="date" class="modal-date-input" id="modal-date-input">
+    </div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti-wrap" id="confetti"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════
+const PHASES = [
+  { id:'p1', cls:'ph1', num:'1', title:'Document Preparation — Whole Family', dates:'Apr – Nov 2026',
+    steps:[
+      {id:'s1_1',who:'YOU',   title:'Pharmacy degree + transcripts (certified copy)',detail:'Documents are in English — no NAATI translation needed. Take originals to a notary public in Abuja for certification. Scan certified copy once at 300 DPI colour. Same scan uploads to APC, AHPRA, and Home Affairs.',cost:'~AUD 20–50',deadline:'30 Apr 2026',explanation:'<p>Take originals to a <strong>notary public in Abuja</strong>. They sign and stamp a photocopy confirming it is a true copy (~₦1,000–2,000 per document). Scan each certified copy in <strong>colour at 300 DPI minimum</strong>. Save as PDF and JPEG. The same scan uploads to APC, AHPRA, and Home Affairs — one scan serves all three organisations. Do not laminate originals before scanning. Keep originals safe throughout — a visa case officer may request sight of them.</p>'},
+      {id:'s1_2',who:'YOU',   title:'PCN registration certificate (certified copy, must be active)',detail:'Pharmacists Council of Nigeria certificate. Must be current. Certify and scan in the same notary session as your other documents.',cost:'~AUD 20',deadline:'30 Apr 2026',explanation:'<p>Your <strong>PCN certificate</strong> proves you are a currently registered pharmacist in Nigeria — APC requires this as mandatory. Check the expiry date before certifying. If expired or close to expiry, renew with PCN first. It must be <strong>active at the time of APC submission</strong>. Certify in the same notary session as your degree to save time.</p>'},
+      {id:'s1_3',who:'YOU',   title:'Signed CV covering full pharmacy and professional practice history',detail:'APC requires a CV with all roles, dates, responsibilities, and training. Include GHSC-PSM role and dates explicitly. Health supply chain background is directly relevant.',cost:'Free',deadline:'15 May 2026',explanation:'<p>APC requires a <strong>signed, detailed CV</strong> covering your complete pharmacy and professional history: job titles, organisations, dates (month and year), and a description of responsibilities for every role.</p><p>Your <strong>GHSC-PSM/Chemonics role</strong> should describe pharmaceutical supply chain management, health commodity distribution, warehouse operations, 3PL oversight, and direct pharmaceutical involvement. Include your MSPH, CSCP, and CSCA. <strong>Sign by hand and scan</strong> — a typed name is not sufficient.</p>'},
+      {id:'s1_4',who:'ALL',   title:'Samuel & wife passports — check expiry and renew if needed',detail:'Both must remain valid through at least December 2028. Check expiry dates immediately. If expiring before Dec 2028, renew now.',cost:'~AUD 40–60 each if renewal',deadline:'30 Apr 2026',explanation:'<p>Check expiry dates on both passports immediately. Both must remain valid through <strong>December 2028</strong> — covering visa lodgement (January 2027), travel to Australia (September–December 2027), and the internship period through to general registration (February 2029).</p><p><strong>Critical:</strong> if you renew a passport after the visa is granted, notify the Department of Home Affairs immediately to transfer the visa to the new passport number before travelling. Travelling on a different passport than the one linked to the visa grant causes serious problems at the Australian border.</p>'},
+      {id:'s1_5',who:'FAMILY',title:'Boys\' passports — Simeon & Stefan (first Nigerian passports)',detail:'Apply by 1 November 2026 (boys age ~7–8 months). Standard NIS processing: 4–8 weeks. Must be in hand before January/February 2027 visa lodgement. Infant photo tip: lay baby on white sheet, photograph from above, eyes open, no parent visible.',cost:'~AUD 20–40 each',deadline:'1 Nov 2026',explanation:'<p>Apply for both boys’ first Nigerian passports by <strong>1 November 2026</strong> (boys age ~7–8 months). Standard NIS processing is 4–8 weeks. Passports must be in hand before January/February 2027 visa lodgement.</p><p><strong>Infant photo tip:</strong> lay the baby on a plain white sheet, photograph directly from above. Eyes open, face forward, no parent or hands visible. NIS accepts this for infants who cannot sit.</p><p>5-year passports issued November 2026 expire ~November 2031 — covering all milestones with years to spare. At travel (September–December 2027, boys age ~18–21 months), they will look very different from newborn photos. Always carry <strong>birth certificates</strong> when travelling. If boys receive new passports after the visa is granted, notify Home Affairs immediately to transfer the visa to the new passport numbers.</p>'},
+      {id:'s1_6',who:'FAMILY',title:'Marriage certificate (certified copy)',detail:'Required to prove spousal relationship. Name spelling must match passports exactly. Any discrepancy requires a statutory declaration. Certify and scan with other documents.',cost:'~AUD 5–10',deadline:'30 Apr 2026',explanation:'<p>The certified marriage certificate confirms your wife’s status as your dependant spouse. <strong>Name consistency is critical</strong> — the name on the certificate must match her passport exactly, including middle names, hyphenation, and spelling. Any discrepancy requires a statutory declaration explaining the variation, adding processing time. Certify at a notary public in the same session as your other documents.</p>'},
+      {id:'s1_7',who:'FAMILY',title:'Birth certificates for Simeon and Stefan (certified copies)',detail:'NBS Nigeria birth certificates (in English). Certify and scan. Names must match passports. Obtain and certify as soon as birth registration is complete.',cost:'~AUD 5–10 each',deadline:'30 Jun 2026',explanation:'<p>Certified copies of both boys’ NBS birth certificates prove the parent-child relationship for their inclusion as dependants. Obtain and certify <strong>as soon as birth registration is complete</strong> — NBS registration can take several weeks. Names on birth certificates must match the boys’ passports exactly. Both boys need their own separately certified copies. Certify at a notary public and scan at 300 DPI colour.</p>'},
+      {id:'s1_8',who:'FAMILY',title:"Wife's police clearance certificates (NPF + ICPC)",detail:'Apply via POSSAP online portal. Valid 12 months from issue for Australian immigration. Time application to be in hand by January 2027 — valid through January 2028, covering full visa processing window.',cost:'~AUD 30–60',deadline:'1 Feb 2027',explanation:'<p>Your wife requires <strong>two certificates</strong>: Nigeria Police Force (NPF) certificate AND ICPC clearance. Apply through the <strong>POSSAP online portal</strong> (possap.gov.ng). Standard processing: ₦10,000–12,000, 2–4 weeks. Expedited: ~₦15,000, 7–10 business days.</p><p>The certificate is valid for <strong>12 months from issue date</strong> for Australian immigration. Apply by 1 February 2027 so validity covers through at least February 2028 — the full visa processing window. Children under 16 are exempt from police clearance requirements.</p>'},
+      {id:'s1_9',who:'YOU',   title:"Samuel's police clearance certificates (NPF + ICPC)",detail:'Same as wife. Apply via POSSAP. Standard processing: 2–4 weeks. Expedited: 7–10 business days (~₦15,000). Time to arrive in hand by January 2027.',cost:'~AUD 30–60',deadline:'1 Feb 2027',explanation:'<p>Apply for your own <strong>NPF certificate + ICPC clearance</strong> through POSSAP (possap.gov.ng) by 1 February 2027 to maintain 12-month validity through the full visa processing window (expected grant August–November 2027).</p><p>If you have lived in any other country for 12+ months since age 16, you also need clearance from those countries. Contact the relevant embassy or authority for each. Keep digital and physical copies — a case officer may request certified copies during visa processing.</p>'},
+      {id:'s1_10',who:'ALL',  title:'Engage MARA-registered migration agent',detail:'Verify at mara.gov.au before paying any fees. Agent should begin preparing the EOI in parallel with your OPRA preparation so it is ready to lodge the moment the Skills Assessment Outcome letter arrives.',cost:'~AUD 1,500–3,000',deadline:'1 May 2026',explanation:'<p>A MARA-registered agent is strongly recommended with a family of 4. Verify any agent at <strong>mara.gov.au</strong> before paying any fees. Your agent’s key tasks: accurately calculate your points score, advise on which state is drawing most frequently for pharmacists, prepare the full EOI for immediate lodgement when your Skills Assessment Outcome letter arrives, correctly declare all four dependants, and handle any Requests for Further Information from Home Affairs.</p><p><strong>Cost:</strong> AUD 1,500–2,000 for standard service; up to AUD 3,000 for comprehensive support.</p>'},
+    ]},
+  { id:'p2', cls:'ph2', num:'2', title:'APC Eligibility Check + IELTS — July 2026', dates:'May – Aug 2026',
+    steps:[
+      {id:'s2_1',who:'YOU',title:'Create account on APC Candidate Portal (pharmacycouncil.org.au)',detail:'Apply only through the official portal. APC has issued formal warnings against scam services. No agent may register on your behalf.',cost:'Free',deadline:'1 May 2026',explanation:'<p>Go to <strong>pharmacycouncil.org.au</strong> and create your candidate account. This is the only legitimate APC portal — APC has issued formal warnings against third-party scam services. No migration agent can register on your behalf. You must create the account yourself using your own email and identity.</p><p>Keep your login credentials secure — you will use this account for the eligibility check, OPRA registration, and to receive your Skills Assessment Outcome letter.</p>'},
+      {id:'s2_2',who:'YOU',title:'Submit APC Eligibility Check application',detail:'Upload certified copies: degree + transcripts, PCN certificate, passport, CV. Documents are in English — no NAATI translation. Pay AUD 810 at submission. Aim for first week of May to receive Eligibility Letter by mid-June.',cost:'AUD 810',deadline:'7 May 2026',explanation:'<p>Submit the APC Eligibility Check by uploading: certified degree + transcripts, PCN certificate, valid passport, signed CV. Your documents are in English — no NAATI translation needed. Pay <strong>AUD 810</strong> at submission.</p><p>Submit in the <strong>first week of May 2026</strong>. Processing takes 4–6 weeks. Submitting by 7 May gives you a realistic chance of receiving the Eligibility Confirmation Letter by mid-June — giving adequate time to register for the November 2026 OPRA exam. If your application is incomplete, APC requests missing information and the clock pauses. Ensure every document is uploaded before submitting.</p>'},
+      {id:'s2_3',who:'YOU',title:'Book IELTS Academic exam — July 2026 sitting',detail:'Book immediately — British Council and IDP centres in Lagos/Abuja fill up fast. Book 8–10 weeks in advance. Target: L 7.0 / R 7.0 / S 7.0 / W 6.5. Results valid 2 years (to July 2028).',cost:'~AUD 320',deadline:'7 May 2026 (booking)',explanation:'<p>Book your July 2026 IELTS Academic sitting through <strong>British Council</strong> (britishcouncil.org.ng) or <strong>IDP</strong> (ielts.idp.com). Test centres in Lagos and Abuja fill up quickly — book at least 8–10 weeks in advance, meaning by early May 2026.</p><p>IELTS Academic (not General Training) is the correct module for AHPRA. Required scores: Listening 7.0, Reading 7.0, Speaking 7.0, Writing 6.5 (updated April 2025 standard). Results are valid for <strong>2 years</strong> — a July 2026 result is valid through July 2028, covering every AHPRA deadline in this roadmap. If you do not achieve all required bands, you can resit in September or October 2026. AHPRA allows combining two sittings within 12 months, using the best score from each section.</p>'},
+      {id:'s2_4',who:'YOU',title:'Receive APC Eligibility Confirmation Letter',detail:'Expected mid-June 2026 (4–6 weeks after submission). Unlocks OPRA registration. Keep permanently — needed again at AHPRA provisional registration in January 2027.',cost:'Included',deadline:'30 Jun 2026 (expected)',explanation:'<p>The APC Eligibility Confirmation Letter is issued after APC determines your pharmacy degree meets Australian equivalence standards. Expected receipt: <strong>mid-June 2026</strong> (4–6 weeks after submission).</p><p>This letter is the <strong>only document that unlocks OPRA registration</strong>. You cannot register for the exam without it. Keep it permanently — it is also required when you apply for provisional AHPRA registration in January 2027. Store digital copies in at least two secure locations.</p>'},
+      {id:'s2_5',who:'YOU',title:'Sit IELTS Academic exam — July 2026',detail:'Confirm all band scores on receipt of results (~13 days after exam). If Writing < 6.5, book a resit in September/October 2026 — two sittings within 12 months can be combined by AHPRA.',cost:'Already paid',deadline:'31 Jul 2026',explanation:'<p>Sit your IELTS Academic exam at your booked centre in July 2026. Bring your <strong>valid passport</strong> — the name must match your IELTS registration exactly.</p><p>Results are available online approximately <strong>13 days after the exam</strong>. Check them immediately. If Writing is below 6.5 or any other band below 7.0, book a resit immediately for September or October 2026 — you still have time before OPRA results are needed in January 2027. AHPRA combines the best scores from up to two sittings within 12 months.</p>'},
+      {id:'s2_6',who:'YOU',title:'Verify IELTS results meet AHPRA standard',detail:'Required: L ≥7.0 / R ≥7.0 / S ≥7.0 / W ≥6.5. Results valid until July 2028 — covers AHPRA provisional (Jan 2027) and general registration (Jan–Feb 2029) with time to spare.',cost:'Included',deadline:'15 Aug 2026',explanation:'<p>Confirm your results meet the AHPRA standard: <strong>Listening ≥7.0, Reading ≥7.0, Speaking ≥7.0, Writing ≥6.5</strong>. This standard was updated in April 2025 — Writing was reduced from 7.0 to 6.5.</p><p>Your July 2026 results are valid until <strong>July 2028</strong> — covering your provisional AHPRA registration (January 2027) and general registration (January–February 2029) with time to spare. If you need to resit, AHPRA combines the best scores across two sittings within 12 months.</p>'},
+    ]},
+  { id:'p3', cls:'ph3', num:'3', title:'OPRA Exam: Register, Study & Sit — Nov 2026', dates:'Jul 2026 – Jan 2027',
+    steps:[
+      {id:'s3_1',who:'YOU',title:'Register for November 2026 OPRA exam',detail:'Pay AUD 2,245 (exam) + AUD 300 (Skills Assessment Outcome fee). Select Pearson VUE in Lagos or Abuja. Register as soon as Eligibility Confirmation Letter arrives — do not wait until October.',cost:'AUD 2,545 total',deadline:'31 Jul 2026',explanation:'<p>Register on the APC Candidate Portal using your Eligibility Confirmation Letter. Pay <strong>AUD 2,245</strong> (exam fee) + <strong>AUD 300</strong> (Skills Assessment Outcome fee). The Skills Assessment Outcome letter — issued after passing OPRA — is what you use for the visa EOI and AHPRA provisional registration.</p><p>Select Pearson VUE centre: Lagos (Victoria Island) or Abuja. Register as soon as possible after your Eligibility Confirmation Letter arrives — <strong>do not wait until October</strong>. Early registration secures your preferred centre and exam slot.</p>'},
+      {id:'s3_2',who:'YOU',title:'Weeks 1–2: Diagnostic + Australian pharmacy system',detail:'Take one full APC sample question set cold to establish a baseline. Then begin PBS rules, AMH orientation, and Therapeutic Guidelines navigation. PBS website is free.',cost:'~AUD 200–350',deadline:'14 Aug 2026',explanation:'<p>Before studying anything else, take <strong>one full APC sample question set under timed conditions</strong> — this is your cold baseline showing your current score across all domains.</p><p>Then begin with the Australian pharmacy system: PBS (Pharmaceutical Benefits Scheme) rules, Australian drug scheduling, and AMH (Australian Medicines Handbook) navigation. The PBS website (pbs.gov.au) is free. AMH costs ~AUD 100–150 for an annual subscription but is the most important single resource in the entire preparation.</p>'},
+      {id:'s3_3',who:'YOU',title:'Weeks 3–8: Therapeutics & Patient Care (45%)',detail:'Chronic disease (diabetes, hypertension, cardiovascular), mental health, antimicrobials (eTG Antibiotic chapter), pain, women\'s health, paediatrics, aged care. Majority of study hours go here.',cost:'Study materials above',deadline:'30 Sep 2026',explanation:'<p>Therapeutics and Patient Care carries <strong>45% of the OPRA exam</strong>. Spend the majority of your study hours here.</p><p>Key areas: PBS prescribing rules, chronic disease management (diabetes, hypertension, dyslipidaemia, heart failure, asthma, COPD), mental health pharmacotherapy (antidepressants, antipsychotics, mood stabilisers), antimicrobials using the <strong>Therapeutic Guidelines — Antibiotic chapter</strong>, pain management, women’s health, paediatric dosing (AMH Children’s Dosing Companion), and aged care (Don’t Rush to Crush — free PDF).</p><p>Primary resources: <strong>Australian Medicines Handbook (AMH)</strong> and <strong>Therapeutic Guidelines (eTG)</strong>. These two texts are the closest thing to the exam’s source material.</p>'},
+      {id:'s3_4',who:'YOU',title:'Weeks 6–10: Biomedical Sciences (20%) + Pharmacology (15%)',detail:'Pathophysiology of key diseases (Robbins). Receptor pharmacology, autonomic and CNS pharmacology (Rang & Dale\'s). Drug mechanisms, adverse effects, interactions.',cost:'~AUD 80–120',deadline:'15 Oct 2026',explanation:'<p><strong>Biomedical Sciences (20%):</strong> Pathophysiology of cardiovascular, respiratory, and endocrine diseases (Robbins Basic Pathology). Microbiology — bacteria and antibiotic targets. Physiology — renal and autonomic (Guyton and Hall). Khan Academy is a free resource for video explanations.</p><p><strong>Pharmacology and Toxicology (15%):</strong> Rang and Dale’s Pharmacology is the primary text. Focus on: receptor pharmacology, autonomic nervous system drugs, CNS pharmacology (opioids, antidepressants, antipsychotics), cardiovascular pharmacology, antimicrobial mechanisms, and toxicology/overdose management including antidotes (naloxone, acetylcysteine, flumazenil).</p>'},
+      {id:'s3_5',who:'YOU',title:'Weeks 9–12: PK/PD (10%) + Medicinal Chemistry (10%) + mock exams',detail:'PK calculations, TDM, renal dose adjustment (Applied PK — Burton). BCS, formulation types, stability. Sit at least 2 full timed mock exams. Review every wrong answer.',cost:'~AUD 200–500',deadline:'1 Nov 2026',explanation:'<p><strong>PK/PD (10%):</strong> Applied PK and PD (Burton et al.) covers PK calculations, Vd, clearance, half-life, TDM (vancomycin, gentamicin, digoxin, lithium, phenytoin), and renal dose adjustment. Basic Pharmacokinetics by Makoid et al. is a free PDF online. MDCalc.com has free dose adjustment calculators.</p><p><strong>Medicinal Chemistry (10%):</strong> Foye’s Principles of Medicinal Chemistry for SAR. Aulton’s Pharmaceutics for biopharmaceutics, BCS classification, and formulation types. Don’t Rush to Crush guide (free PDF) for modified-release tablets — highly yield for Australian pharmacy practice questions.</p><p><strong>Mock exams:</strong> Sit at least 2 full 120-question timed exams under real conditions. Review every wrong answer in detail. Elite Expertise and Academically offer OPRA-specific mock papers.</p>'},
+      {id:'s3_6',who:'YOU',title:'Sit OPRA exam — November 2026',detail:'120 MCQs in 2h 15min at Pearson VUE. Arrive early with valid ID matching APC portal registration. If unsuccessful, next sitting is March 2027 — treat November as the only option.',cost:'Included',deadline:'30 Nov 2026',explanation:'<p>Sit the OPRA exam at your Pearson VUE centre (Lagos or Abuja). Bring your <strong>valid passport</strong> — the name must match your APC portal registration exactly. Arrive at least 30 minutes early.</p><p>The exam is 120 MCQs in 2 hours 15 minutes — computer-based. There is no penalty for wrong answers, so answer every question. Results are scored using Rasch methodology and released as <strong>Successful or Unsuccessful</strong> (no percentage) approximately 4–6 weeks after the exam window closes.</p><p>If unsuccessful, the next sitting is <strong>March 2027</strong> — pushing arrival to early 2028 and general registration to mid-2029. Treat November 2026 as the only acceptable outcome.</p>'},
+      {id:'s3_7',who:'YOU',title:'Receive Skills Assessment Outcome letter',detail:'Expected December 2026 – January 2027 (4–6 weeks after exam window). On receipt, immediately instruct migration agent to lodge EOI. Do not delay.',cost:'AUD 300 already paid',deadline:'15 Jan 2027 (expected)',explanation:'<p>Results are released 4–6 weeks after the exam window closes. Expect your <strong>Skills Assessment Outcome letter in December 2026 or January 2027</strong>.</p><p>On the day this letter arrives, contact your migration agent immediately and instruct them to lodge the EOI on SkillSelect. Do not wait — every day in the SkillSelect queue matters for invitation timing. Your agent should have the complete EOI pre-prepared and ready to submit on receipt of this letter. Store the letter permanently — it is needed for both the visa EOI and the AHPRA provisional registration.</p>'},
+    ]},
+  { id:'p4', cls:'ph4', num:'4', title:'Visa EOI & Family Application — All 4', dates:'Jan – Nov 2027',
+    steps:[
+      {id:'s4_1',who:'ALL',   title:'Lodge EOI on SkillSelect immediately on receipt of outcome letter',detail:'Samuel AUD 4,910 + wife AUD 2,455 + Simeon AUD 1,230 + Stefan AUD 1,230 = AUD 9,825 total. Declare ALL four family members. Agent should have EOI pre-prepared and lodge same day as outcome letter.',cost:'AUD 9,825 total',deadline:'20 Jan 2027',explanation:'<p>Your migration agent lodges the EOI on <strong>SkillSelect (skillselect.gov.au)</strong> immediately on receipt of the Skills Assessment Outcome letter. Total visa fees: AUD 9,825 for the family of 4.</p><p>The EOI must declare <strong>all four family members</strong>: you, your wife, Simeon, and Stefan. Failing to declare a dependant at EOI stage means they cannot be added to the visa later. In the EOI you declare your occupation (Pharmacist — ANZSCO 251513), your points score, preferred states for nomination, and all dependant details. Your agent handles the technical lodgement.</p>'},
+      {id:'s4_2',who:'ALL',   title:'Confirm points score and target state with migration agent',detail:'Estimated 75–90+ points. Target: WA (Perth), SA (Adelaide), QLD (Brisbane), TAS (Hobart). Avoid NSW and VIC — healthcare quotas filled. Agent advises on which state is drawing most frequently.',cost:'Agent fee',deadline:'20 Jan 2027',explanation:'<p>Your estimated points score is approximately 75–90+: age bracket 25–44 (25–30 points), IELTS Proficient English (20 points), overseas employment 8+ years (15 points), recognised degree (15 points), and state nomination (5 points).</p><p><strong>Target states for pharmacist nomination:</strong> WA (Perth) — strong pharmacist demand, affordable family living; SA (Adelaide) — most affordable capital city; QLD (Brisbane) — growth city; TAS (Hobart) — highest healthcare nomination success rate. Avoid NSW and VIC — healthcare quotas restricted. Your agent will know which state is actively drawing invitations for pharmacists at the time of your EOI.</p>'},
+      {id:'s4_3',who:'ALL',   title:'Receive state nomination and lodge visa application within 60 days',detail:'Once nominated, lodge visa application immediately — do not wait out the 60-day window. A complete error-free application minimises processing time. Any Request for Further Info (RFI) adds 45–60 days.',cost:'Included in EOI fee',deadline:'31 Mar 2027',explanation:'<p>Once your state nominates you, you receive an invitation to apply for Subclass 190. You have <strong>60 days to lodge</strong> — lodge on day one, not day 60.</p><p>A complete, error-free application is the single most important factor in fast processing. The most common cause of delays is a <strong>Request for Further Information (RFI)</strong> from a case officer — this pauses your application and adds 45–60 days once you respond. Avoid RFIs by ensuring every document is correctly certified, clearly scanned, and all declarations are accurate before lodging.</p>'},
+      {id:'s4_4',who:'ALL',   title:'Health examinations — all 4 family members',detail:'CRITICAL: if any one of the 4 fails, entire visa refused. Wait for HAP IDs from Home Affairs before booking. By April 2027, the boys will be ~13 months old — basic paediatric exam only (no X-ray). Samuel and wife: full exam + chest X-ray.',cost:'~AUD 800–1,200',deadline:'30 Apr 2027',explanation:'<p><strong>CRITICAL:</strong> Do NOT book health examinations until you receive your <strong>HAP ID</strong> from the Department of Home Affairs after lodging the visa. Undertaking medicals before lodgement risks results expiring during processing.</p><p>All 4 must pass. <strong>If any one of the 4 fails, the entire visa is refused for all.</strong> By April 2027, Simeon and Stefan will be approximately 13 months old — they require a basic paediatric examination only (no chest X-ray). Samuel and wife require a full examination including chest X-ray. Schedule through an Australian-approved panel physician in Nigeria. Results are valid for 12 months.</p>'},
+      {id:'s4_5',who:'ALL',   title:'Police clearances — Samuel and wife (children under 16 exempt)',detail:'NPF + ICPC for both adults. Valid 12 months from issue. Apply via POSSAP by 1 February 2027 to maintain validity through full processing window (expected grant Aug–Nov 2027).',cost:'~AUD 60–120',deadline:'1 Feb 2027',explanation:'<p>Apply for NPF + ICPC clearances by <strong>1 February 2027</strong> through POSSAP (possap.gov.ng). Validity: 12 months from issue. A February 2027 issue date gives validity through February 2028 — covering the full visa processing window (expected grant August–November 2027). Children under 16 are exempt. If either adult has lived in any other country for 12+ months since age 16, clearance from those countries is also required.</p>'},
+      {id:'s4_6',who:'ALL',   title:'Receive Subclass 190 visa grant — all 4 permanent residents',detail:'Expected 6–9 months after lodgement: August–November 2027. All 4 receive PR simultaneously. Medicare, CCS, and full work rights for wife activate on arrival in Australia.',cost:'PR granted 🎉',deadline:'Nov 2027 (expected)',explanation:'<p>The Subclass 190 visa grant typically takes <strong>6–9 months</strong> from lodgement. Based on your revised timeline with lodgement in January–March 2027, the expected grant date is <strong>August–November 2027</strong>.</p><p>On grant, all four family members simultaneously receive Australian permanent residency. You can travel independently at different times — each person must make their first entry before their individual first-entry deadline (stated on the grant letter, typically 12 months from their medical examination date). If you travel first to start work, ensure your wife has copies of all visa grant documents when she travels with the boys. The boys’ PR is linked electronically to their passport numbers.</p>'},
+    ]},
+  { id:'p5', cls:'ph5', num:'5', title:'AHPRA Provisional Registration', dates:'Jan – Sep 2027',
+    steps:[
+      {id:'s5_1',who:'YOU',title:'Apply for provisional AHPRA registration',detail:'Submit: Skills Assessment Outcome letter + IELTS results (valid to July 2028) + certified degree + passport + CV + PCN certificate. Apply from Nigeria via ahpra.gov.au. Processing: 4–8 weeks.',cost:'~AUD 400–600',deadline:'31 Jan 2027',explanation:'<p>Apply through <strong>ahpra.gov.au</strong> as soon as the Skills Assessment Outcome letter arrives. You can apply from Nigeria. Upload: Skills Assessment Outcome letter, IELTS results (valid to July 2028), certified pharmacy degree + transcripts, valid passport, signed CV, and PCN certificate.</p><p>Processing takes approximately 4–8 weeks. The Pharmacy Board may request additional information — respond promptly to any requests to avoid delays.</p>'},
+      {id:'s5_2',who:'YOU',title:'Receive provisional AHPRA registration',detail:'Name on AHPRA national register. Cannot practise independently — must work under a general-registered pharmacist. Now eligible to commence supervised internship on arrival.',cost:'Included',deadline:'28 Feb 2027 (expected)',explanation:'<p>Your name appears on the <strong>AHPRA national register</strong> as a provisionally registered pharmacist — publicly searchable at ahpra.gov.au. Provisional registration allows you to practise only under the direct supervision of a general-registered pharmacist. You <strong>cannot practise independently</strong> until you complete the 1,575-hour internship and pass both intern exams.</p>'},
+      {id:'s5_3',who:'ALL',title:'Secure supervised practice placement before arrival',detail:'Community, hospital, or aged care all qualify. Use PSA and Pharmacy Guild job boards. Regional pharmacies in target state are most receptive. Confirm placement before booking flights.',cost:'No fee',deadline:'30 Sep 2027',explanation:'<p>Secure your supervised practice placement <strong>before you arrive in Australia</strong>. This means having a signed agreement with a supervising pharmacist and a start date confirmed before booking flights.</p><p>Your supervisor must hold general AHPRA registration. Community pharmacy, hospital pharmacy, and aged care all qualify. Job boards: <strong>PSA (psa.org.au)</strong> and the <strong>Pharmacy Guild</strong> job board. Regional pharmacies are most willing to take on overseas-trained pharmacists. Your <strong>8+ years in pharmaceutical supply chain</strong> is a genuine differentiator — highlight it, particularly for hospital pharmacy and dispensary roles.</p>'},
+      {id:'s5_4',who:'ALL',title:'Join childcare waitlists in target city from Nigeria',detail:'Contact 3–5 toddler room care centres in target city with estimated arrival Sept–Dec 2027. Boys will be ~18–21 months at arrival — toddler room age. Most centres accept remote email waitlist registrations.',cost:'No fee',deadline:'31 Jan 2027',explanation:'<p>Contact 3–5 toddler room care centres in your target Australian city by <strong>31 January 2027</strong> with your estimated arrival window of September–December 2027. At arrival, Simeon and Stefan will be approximately 18–21 months — <strong>toddler room age</strong> (18 months–3 years).</p><p>Most centres accept remote waitlist registrations by email. Include your arrival window and both boys’ names and dates of birth. As PR holders, you qualify for <strong>Child Care Subsidy (CCS) from day one of arrival</strong> with no waiting period. At intern pharmacist income, the subsidy rate is 70–85%, saving approximately AUD 15,000–30,000 per year for both boys combined.</p>'},
+    ]},
+  { id:'p6', cls:'ph6', num:'6', title:'Arrival + Settlement + Internship', dates:'Sep 2027 – Oct 2028',
+    steps:[
+      {id:'s6_1',who:'ALL',   title:'Enrol with Medicare — all 4 family members',detail:'As PR holders, Medicare applies from day one. Visit Medicare service centre or register via myGov within first week of arrival. Covers GP, hospital, PBS for all four including boys (age ~18–21 months).',cost:'Free',deadline:'Within 7 days of arrival',explanation:'<p>As permanent residents, Medicare applies from <strong>day one of arrival</strong>. Visit a Medicare service centre or register online at servicesaustralia.gov.au/medicare within the first week. Bring your passport and visa grant letter.</p><p>Medicare covers: bulk-billed GP visits (free at bulk-billing practices), public hospital treatment, and Pharmaceutical Benefits Scheme (PBS) medications at subsidised rates. All four family members — including Simeon and Stefan — are covered individually. This replaces the need for private health insurance for most standard care.</p>'},
+      {id:'s6_2',who:'ALL',   title:'Set up myGov, Tax File Numbers, and bank accounts',detail:'Open Australian bank account (ANZ, CommBank, NAB). Apply for TFNs via ATO.gov.au for Samuel and wife. Register myGov to link Medicare, Centrelink (CCS), and ATO.',cost:'Free',deadline:'Within 14 days of arrival',explanation:'<p>Open an Australian bank account immediately — most banks allow remote opening before arrival or on the day with a passport. Recommended: ANZ, CommBank, NAB, or Westpac.</p><p>Apply for <strong>Tax File Numbers (TFN)</strong> for yourself and your wife through ato.gov.au. Your TFN is required by your employer before you start the internship — without it you are taxed at the highest rate. Set up a <strong>myGov account</strong> at my.gov.au and link it to Medicare and Centrelink — this is the gateway to Child Care Subsidy, Family Tax Benefit, and all government benefits.</p>'},
+      {id:'s6_3',who:'FAMILY',title:'Apply for Child Care Subsidy (CCS) via Centrelink/myGov',detail:'No waiting period as PR holders — claim from day one. At intern salary (~AUD 55–70k), expect 70–85% subsidy. 3 Day Guarantee: 72hrs/fortnight per child regardless of work hours. Applies independently to Simeon and Stefan.',cost:'Saves ~AUD 15–30k/yr',deadline:'Within 14 days of arrival',explanation:'<p>Apply for <strong>Child Care Subsidy (CCS)</strong> through your myGov account linked to Centrelink. As PR holders, there is no Newly Arrived Resident’s Waiting Period — claim from day one.</p><p>At intern pharmacist income (~AUD 55–70k), the subsidy rate is approximately <strong>70–85%</strong>. The <strong>3 Day Guarantee</strong> (from January 2026) entitles all eligible families to at least 72 hours of subsidised care per fortnight per child, regardless of employment hours. This applies independently to Simeon and Stefan. Also check eligibility for <strong>Family Tax Benefit Parts A and B</strong> through Centrelink.</p>'},
+      {id:'s6_4',who:'FAMILY',title:'Enrol Simeon and Stefan in toddler room long day care',detail:'Boys arrive aged ~18–21 months — toddler room (18 months–3 years). After CCS: ~AUD 25–60/day per child out-of-pocket. Budget ~AUD 300–700/month total for both. Waitlist should already be active.',cost:'~AUD 300–700/month',deadline:'Within 30 days of arrival',explanation:'<p>Your childcare waitlist applications from January 2027 should already be active by arrival. Confirm enrolment and provide CCS details so fees are calculated correctly from day one.</p><p>At 18–21 months, the boys are in the <strong>toddler room</strong>. Gross fee: AUD 150–250/day per child. After CCS at your income level: approximately <strong>AUD 25–60/day per child out-of-pocket</strong>. For 3 days/week per child, budget approximately AUD 300–700/month total. Vaccination compliance is required for CCS eligibility.</p>'},
+      {id:'s6_5',who:'ALL',   title:'Secure rental accommodation in target city',detail:'Budget AUD 2,000–3,500/month for 2–3 bedroom. Perth and Adelaide most affordable capital cities. Research suburbs remotely from Nigeria before arrival — proximity to workplace and childcare matters.',cost:'Living cost',deadline:'Before arrival',explanation:'<p>Research suburbs from Nigeria before arriving — do not wait until you land. Consider proximity to your pharmacy workplace, the childcare centre, and your wife’s workplace. These three should form a manageable daily triangle.</p><p>Budget <strong>AUD 2,000–3,500/month</strong> for a 2–3 bedroom property. Perth and Adelaide are most affordable. A rental bond is typically 4 weeks rent (AUD 8,000–14,000) payable in advance. Consider furnished short-term rentals (Airbnb or serviced apartments) for the first 2–4 weeks while securing a longer-term lease.</p>'},
+      {id:'s6_6',who:'YOU',   title:'Commence supervised pharmacy internship — January 2028',detail:'1,575 hours full-time (~9–10 months, completing ~October 2028). Paid: ~AUD 55–70k/year. Community, hospital, aged care all qualify. Health supply chain background directly relevant to hospital and dispensary settings.',cost:'Earned income',deadline:'Jan 2028',explanation:'<p>Your supervised internship must total <strong>1,575 hours</strong>. At full-time (40 hours/week), this takes approximately 9–10 months, completing around October 2028. Hours are logged by your supervising pharmacist in the AHPRA-linked system.</p><p>Your <strong>health supply chain background</strong> is a genuine professional asset — highlight it to employers, particularly for hospital pharmacy and dispensary-related roles. You will earn approximately <strong>AUD 55,000–70,000/year</strong> as an intern. Your wife’s full work rights are financially important during this period — the household needs a second income to cover rent and childcare comfortably.</p>'},
+      {id:'s6_7',who:'FAMILY',title:'Register boys with GP and paediatrician; Australian vaccination schedule',detail:'Bring all Nigerian vaccination and health records. Boys age ~18–21 months — due for ongoing developmental checks. Vaccination compliance required for CCS and Family Tax Benefit eligibility. Covered by Medicare.',cost:'Medicare covered',deadline:'Within 30 days of arrival',explanation:'<p>Register the boys with a GP and paediatrician within the first month of arrival. Bring all <strong>Nigerian vaccination records</strong> so the Australian schedule can be mapped against their existing coverage.</p><p>At 18–21 months, the boys are due for ongoing developmental checks. The Australian National Immunisation Program requires specific vaccines at 12 months and 18 months — your GP will administer any catch-up vaccines. <strong>Vaccination compliance is required for CCS and Family Tax Benefit Part A eligibility.</strong> All care under Medicare is free.</p>'},
+      {id:'s6_8',who:'YOU',   title:'Sit Intern Written Exam (APC)',detail:'120 MCQs testing Australian pharmacy practice. Pearson VUE. Book as soon as internship is underway. Plan childcare cover and study leave around exam dates.',cost:'AUD 770',deadline:'30 Jun 2028',explanation:'<p>The Intern Written Exam is 120 MCQs through <strong>Pearson VUE</strong>. Book as early as possible once your internship begins. Plan your <strong>study schedule deliberately</strong> — you will be working full-time and managing two toddlers. Book the exam date first, then work backwards to schedule study weeks. Arrange additional childcare support for the weeks immediately before the exam. Your November 2026 OPRA preparation gives you a strong foundation — topics align closely.</p>'},
+      {id:'s6_9',who:'YOU',   title:'Sit Intern Oral/OSCE Exam (APC)',detail:'Competency-based oral and OSCE. Patient counselling, clinical reasoning, drug interaction management. Arrange additional childcare support during preparation weeks.',cost:'AUD 415',deadline:'31 Oct 2028',explanation:'<p>The Intern Oral/OSCE exam tests clinical competency through scenarios: <strong>patient counselling, drug interaction identification, clinical reasoning, professional communication, and error recognition</strong> in simulated Australian pharmacy settings.</p><p>Book early and arrange childcare cover for at least 2 weeks of focused preparation. Practise counselling scenarios out loud — this is a performance exam, not just a knowledge test. Your professional communication skills from GHSC-PSM are a genuine asset here.</p>'},
+      {id:'s6_10',who:'YOU',  title:'Complete 1,575 hours; obtain internship completion certificate',detail:'Supervisor signs off and submits completion certificate to AHPRA. This is the final document required for general registration application.',cost:'No fee',deadline:'31 Oct 2028',explanation:'<p>Your supervising pharmacist signs off your hours and submits the <strong>internship completion certificate</strong> to AHPRA on your behalf. Ensure your supervisor is tracking hours throughout the internship — do not wait until the end to reconcile. Log and confirm hours regularly.</p><p>This certificate — combined with your two intern exam results — completes the requirements for general AHPRA registration. Apply for general registration immediately on receipt of the certificate.</p>'},
+    ]},
+  { id:'p7', cls:'ph7', num:'7', title:'General AHPRA Registration — Full Practice', dates:'~Jan–Feb 2029',
+    steps:[
+      {id:'s7_1',who:'YOU',title:'Apply for general AHPRA registration',detail:'Submit: internship completion certificate + Intern Written Exam result + Intern Oral/OSCE result + identity documents. Apply immediately after receiving completion certificate.',cost:'AUD 470',deadline:'30 Nov 2028',explanation:'<p>Submit the general registration application through <strong>ahpra.gov.au</strong> as soon as you receive your internship completion certificate. Required: internship completion certificate, Intern Written Exam result, Intern Oral/OSCE result, valid identity documents. Pay the registration fee (~AUD 470). Processing is typically 4–8 weeks for a complete application.</p>'},
+      {id:'s7_2',who:'YOU',title:'Receive general registration — independent practice',detail:'Expected January–February 2029. Salary: AUD 80,000–120,000/year. Practise anywhere in Australia without supervision. Health supply chain background opens hospital pharmacy, clinical pharmacy, and health procurement roles.',cost:'Career begins 🎉',deadline:'Feb 2029 (expected)',explanation:'<p>General registration means you can <strong>practise as a pharmacist anywhere in Australia without supervision</strong>. Salary range: <strong>AUD 80,000–120,000/year</strong>. Hospital and clinical pharmacy typically pays more than community.</p><p>Your supply chain background qualifies you strongly for <strong>hospital pharmacy, clinical pharmacy manager, and health service procurement roles</strong> — which pay at the higher end and are in growing demand across Australia.</p>'},
+      {id:'s7_3',who:'ALL',title:'Annual AHPRA registration renewal',detail:'Renewed annually online via AHPRA portal. Requires CPD hours as set by the Pharmacy Board of Australia.',cost:'~AUD 400–600/yr',deadline:'Annually from Feb 2030',explanation:'<p>AHPRA registration renews annually. Log in to your AHPRA account each year to complete the renewal and declare your CPD (Continuing Professional Development) hours. The Pharmacy Board requires a minimum number of CPD hours per year — details at ahpra.gov.au.</p><p>Failing to renew on time means your registration lapses and you cannot legally practise until it is restored. Set a calendar reminder each year.</p>'},
+      {id:'s7_4',who:'ALL',title:'Australian citizenship pathway — 4 years after PR grant',detail:'All 4 family members eligible simultaneously: Samuel, wife, Simeon, and Stefan. Requires 4 years PR including at least 12 months as permanent resident. Twins included as minor children.',cost:'Citizenship 🇦🇺',deadline:'~2031–2032',explanation:'<p>After 4 years of permanent residency — including at least 12 months as a PR holder — all four family members become eligible to apply for Australian citizenship simultaneously. This includes Simeon and Stefan as minor children.</p><p>Citizenship grants an Australian passport, right to vote, and permanent unconditional right to live and work in Australia. Processing takes approximately 12–24 months. Your estimated citizenship eligibility year is <strong>2031–2032</strong>, depending on when the visa is granted in 2027.</p>'},
+    ]},
+];
+
+// Cost line items for the Costs tab
+const COST_SECTIONS = [
+  { id:'fixed', label:'Fixed Government & Regulatory Fees', items:[
+    {id:'c1', name:'APC Eligibility Check',           est:'AUD 810'},
+    {id:'c2', name:'OPRA Exam Fee',                   est:'AUD 2,245'},
+    {id:'c3', name:'Skills Assessment Outcome',        est:'AUD 300'},
+    {id:'c4', name:'AHPRA Provisional Registration',  est:'~AUD 500'},
+    {id:'c5', name:'Intern Written Exam (APC)',        est:'AUD 770'},
+    {id:'c6', name:'Intern Oral/OSCE Exam (APC)',      est:'AUD 415'},
+    {id:'c7', name:'AHPRA General Registration',       est:'AUD 470'},
+  ]},
+  { id:'visa', label:'Visa — Family of 4 (Subclass 190)', items:[
+    {id:'c8',  name:'Samuel (Primary Applicant)',  est:'AUD 4,910'},
+    {id:'c9',  name:'Wife (Secondary Adult)',       est:'AUD 2,455'},
+    {id:'c10', name:'Simeon (Child)',               est:'AUD 1,230'},
+    {id:'c11', name:'Stefan (Child)',               est:'AUD 1,230'},
+  ]},
+  { id:'variable', label:'Variable / Optional Costs', items:[
+    {id:'c12', name:'IELTS Academic Exam',                        est:'~AUD 320'},
+    {id:'c13', name:'OPRA Study Materials & Course',              est:'~AUD 300–650'},
+    {id:'c14', name:'Document Certification (notary — no NAATI)', est:'~AUD 20–50'},
+    {id:'c15', name:'Health Exams — All 4',                       est:'~AUD 800–1,200'},
+    {id:'c16', name:'Police Clearances — Samuel & Wife',          est:'~AUD 60–120'},
+    {id:'c17', name:'Samuel & Wife Passports (if renewal needed)',est:'~AUD 40–60 each'},
+    {id:'c18', name:'Boys\' Passports — Simeon & Stefan',         est:'~AUD 20–40 each'},
+    {id:'c19', name:'MARA Migration Agent',                       est:'~AUD 1,500–3,000'},
+  ]},
+];
+
+const WARNINGS = [
+  {icon:'🏥',title:'Health check: one fail = whole family visa refused',text:'If any one of the 4 fails the health requirement, the entire visa is refused for all. Do NOT book medicals until you receive HAP IDs from Home Affairs after lodgement. Boys will be ~13 months at health exam date (April 2027) — paediatric exam only, no X-ray.'},
+  {icon:'👨‍👩‍👦‍👦',title:'Declare all family members at EOI stage',text:'Wife and both twins must be declared before state nomination invitation. Failing to declare a dependant means they cannot be added to the visa later.'},
+  {icon:'📅',title:'OPRA November 2026 — failure means March 2027',text:'If unsuccessful in November 2026, the next sitting is March 2027 — pushing arrival to early 2028 and general registration to mid-2029. Treat November as the only acceptable outcome. Register by 31 July 2026.'},
+  {icon:'👶',title:"Boys' passports must be applied for by 1 November 2026",text:'Boys born March 2026. Apply for their Nigerian passports by 1 November 2026 (age ~7–8 months). Standard NIS processing: 4–8 weeks. Passports must be in hand before January/February 2027 visa lodgement. If boys receive new passports after visa grant, notify Home Affairs immediately to transfer visa to new passport number.'},
+  {icon:'🏫',title:'Childcare waitlists — start by 31 January 2027 from Nigeria',text:'Contact 3–5 toddler room centres in your target city by January 2027. Boys arrive ~18–21 months old — toddler room age. Most centres accept remote email waitlist registrations.'},
+  {icon:'🌐',title:'Official portals only',text:'Apply only through pharmacycouncil.org.au (APC) and immi.homeaffairs.gov.au (visa). Verify migration agent at mara.gov.au before paying any fees.'},
+  {icon:'💰',title:'482 visa: fast entry but costly with toddler twins',text:'482 holders are NOT eligible for Child Care Subsidy. With two toddlers in full-time care, unsubsidised costs can exceed AUD 50,000/year. The 190 grants PR and CCS from day one.'},
+  {icon:'✈️',title:"Travelling separately: boys' passport photos vs appearance",text:"Boys' passports will have newborn photos (taken ~7–8 months old). At travel (Sept–Dec 2027) they will be ~18–21 months and look very different. Always carry birth certificates when travelling to confirm identity if questioned at immigration."},
+  {icon:'📋',title:'Documents are in English — no NAATI translation needed',text:'All Nigerian official documents are in English. You need certified copies only (notary public in Abuja). Certify once, scan once — the same scan can be uploaded to APC, AHPRA, and Home Affairs.'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let stepStates  = {};  // stepId -> 'todo'|'in-progress'|'done'
+let stepDates   = {};  // stepId -> 'YYYY-MM-DD'
+let actualCosts = {};  // costId -> number (always stored in AUD)
+let costCurr    = 'AUD';
+let trackerCurr = 'AUD';
+let exRate      = 1650;
+let activeFilter = 'all';
+let modalStepId  = null;
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('bika_v2_steps');
+    if (s) stepStates = JSON.parse(s);
+    const d = localStorage.getItem('bika_v2_dates');
+    if (d) stepDates = JSON.parse(d);
+    const c = localStorage.getItem('bika_v2_costs');
+    if (c) actualCosts = JSON.parse(c);
+    const r = localStorage.getItem('bika_v2_rate');
+    if (r) exRate = parseFloat(r) || 1650;
+  } catch(e) {}
+}
+function saveSteps() { try { localStorage.setItem('bika_v2_steps', JSON.stringify(stepStates)); } catch(e){} }
+function saveDates() { try { localStorage.setItem('bika_v2_dates', JSON.stringify(stepDates));  } catch(e){} }
+function saveCosts() { try { localStorage.setItem('bika_v2_costs', JSON.stringify(actualCosts)); } catch(e){} }
+function saveRate()  { try { localStorage.setItem('bika_v2_rate',  String(exRate)); } catch(e){} }
+
+function getStepState(id) { return stepStates[id] || 'todo'; }
+function setStepState(id, state) { stepStates[id] = state; saveSteps(); }
+
+// ══════════════════════════════════════════════════════════════════
+// CURRENCY HELPERS
+// ══════════════════════════════════════════════════════════════════
+function fmtAUD(n) {
+  if (!n && n !== 0) return '—';
+  return 'AUD ' + n.toLocaleString('en-AU', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+function fmtNGN(n) {
+  if (!n && n !== 0) return '—';
+  return '₦' + Math.round(n * exRate).toLocaleString('en-NG');
+}
+function fmtCurr(audVal, curr) {
+  return curr === 'NGN' ? fmtNGN(audVal) : fmtAUD(audVal);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TOTAL SPENT CALCULATIONS
+// ══════════════════════════════════════════════════════════════════
+function calcTotals() {
+  let fixed=0, visa=0, variable=0;
+  COST_SECTIONS.forEach(sec => {
+    sec.items.forEach(item => {
+      const v = actualCosts[item.id] || 0;
+      if (sec.id === 'fixed')    fixed    += v;
+      if (sec.id === 'visa')     visa     += v;
+      if (sec.id === 'variable') variable += v;
+    });
+  });
+  return { fixed, visa, variable, total: fixed + visa + variable };
+}
+
+function updateSpentCard() {
+  const { total } = calcTotals();
+  const MIN_EST = 19000;
+  const pct = Math.min(Math.round((total / MIN_EST) * 100), 100);
+  const remaining = Math.max(MIN_EST - total, 0);
+
+  if (trackerCurr === 'AUD') {
+    document.getElementById('spent-primary').textContent   = fmtAUD(total);
+    document.getElementById('spent-secondary').textContent = '≈ ' + fmtNGN(total);
+  } else {
+    document.getElementById('spent-primary').textContent   = fmtNGN(total);
+    document.getElementById('spent-secondary').textContent = '≈ ' + fmtAUD(total);
+  }
+  document.getElementById('spent-bar').style.width = pct + '%';
+  document.getElementById('spent-subtext').textContent =
+    total > 0
+      ? `${pct}% of AUD 19,000 est. minimum · ${fmtAUD(remaining)} remaining`
+      : 'of estimated AUD 19,000 minimum · Enter actuals in Costs tab';
+}
+
+function updateCostTotals() {
+  const { fixed, visa, variable, total } = calcTotals();
+  const MIN_EST = 19000;
+  const pct = Math.min(Math.round((total / MIN_EST) * 100), 100);
+
+  document.getElementById('tot-fixed').textContent    = fmtCurr(fixed, costCurr);
+  document.getElementById('tot-visa').textContent     = fmtCurr(visa, costCurr);
+  document.getElementById('tot-variable').textContent = fmtCurr(variable, costCurr);
+  document.getElementById('tot-grand').textContent    = fmtCurr(total, costCurr);
+  document.getElementById('tot-pct-lbl').textContent  = pct + '%';
+  document.getElementById('budget-bar').style.width   = pct + '%';
+  document.getElementById('budget-note').textContent  =
+    total > 0
+      ? `${fmtCurr(total, costCurr)} spent · ${fmtCurr(Math.max(MIN_EST-total,0), costCurr)} remaining to AUD 19,000 estimate`
+      : 'Enter actual amounts above to track spending';
+
+  // Also refresh converted labels inside each row
+  document.querySelectorAll('[data-cost-conv]').forEach(el => {
+    const id = el.dataset.costConv;
+    const v  = actualCosts[id] || 0;
+    if (v > 0) {
+      el.textContent = costCurr === 'AUD' ? '≈ ' + fmtNGN(v) : '≈ ' + fmtAUD(v);
+    } else { el.textContent = ''; }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER TRACKER
+// ══════════════════════════════════════════════════════════════════
+function calcPhaseProgress(phase) {
+  const total = phase.steps.length;
+  const done  = phase.steps.filter(s => getStepState(s.id) === 'done').length;
+  const prog  = phase.steps.filter(s => getStepState(s.id) === 'in-progress').length;
+  return { total, done, prog, pct: Math.round((done/total)*100) };
+}
+function calcOverall() {
+  let total=0, done=0, prog=0;
+  PHASES.forEach(p => p.steps.forEach(s => {
+    total++;
+    const st = getStepState(s.id);
+    if (st === 'done') done++;
+    else if (st === 'in-progress') prog++;
+  }));
+  return { total, done, prog, todo: total-done-prog, pct: total ? Math.round((done/total)*100) : 0 };
+}
+function updateOverall() {
+  const { pct, done, prog, todo } = calcOverall();
+  document.getElementById('pct-num').textContent = pct;
+  document.getElementById('main-bar').style.width = pct + '%';
+  document.getElementById('overall-badge').textContent = pct + '% Complete';
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-prog').textContent = prog;
+  document.getElementById('stat-todo').textContent = todo;
+}
+
+function getWhoClass(who) { return who==='YOU'?'who-you':who==='FAMILY'?'who-family':'who-all'; }
+function getStatusClass(s) { return s==='done'?'st-done':s==='in-progress'?'st-progress':'st-todo'; }
+function getStatusLabel(s) { return s==='done'?'✓ Done':s==='in-progress'?'● Active':'○ Pending'; }
+function shouldShow(state) { return activeFilter === 'all' || state === activeFilter; }
+
+function renderPhases() {
+  const container = document.getElementById('phases-container');
+  container.innerHTML = '';
+  PHASES.forEach(phase => {
+    const { pct, done, total, prog } = calcPhaseProgress(phase);
+    const statusLabel = done===total && total>0 ? 'Complete' : prog>0||done>0 ? 'In Progress' : 'Pending';
+    const statusClass = done===total && total>0 ? 'psp-done'  : prog>0||done>0 ? 'psp-active'  : 'psp-locked';
+    const card = document.createElement('div');
+    card.className = `phase-card ${phase.cls}`;
+    card.id = `phase-${phase.id}`;
+    card.innerHTML = `
+      <div class="phase-header" onclick="togglePhase('${phase.id}')">
+        <div class="phase-num">${phase.num}</div>
+        <div class="phase-info">
+          <div class="phase-title">${phase.title}</div>
+          <div class="phase-dates">${phase.dates} &nbsp;·&nbsp; <span class="phase-status-pill ${statusClass}">${statusLabel}</span></div>
+        </div>
+        <div class="phase-right">
+          <div class="phase-pct-txt">${pct}%</div>
+          <div class="phase-mini-bar"><div class="phase-mini-fill" style="width:${pct}%"></div></div>
+          <div style="font-size:10px;color:var(--text3)">${done}/${total} steps</div>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="phase-steps">${renderSteps(phase)}</div>`;
+    if (done === total && done > 0) card.classList.add('collapsed');
+    container.appendChild(card);
+  });
+  applyFilter();
+}
+
+function renderSteps(phase) {
+  return phase.steps.map(step => {
+    const state = getStepState(step.id);
+    const vis   = shouldShow(state) ? '' : 'style="display:none"';
+    const dateStr = stepDates[step.id] || '';
+    const dateBadge = (state === 'done' && dateStr)
+      ? `<div class="date-badge">
+           <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2M1 5h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+           Completed: ${fmtDate(dateStr)}
+         </div>`
+      : '';
+    const deadlineBadge = (state !== 'done' && step.deadline)
+      ? `<div class="deadline-badge">⏰ Latest: ${step.deadline}</div>`
+      : '';
+    return `<div class="step-item ${state}" id="step-${step.id}" data-state="${state}" data-id="${step.id}" onclick="openModal('${step.id}')" ${vis}>
+      <div class="step-check">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6L5 9L10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="step-body">
+        <div class="step-title">${step.title}</div>
+        <div class="step-meta">
+          <span class="who-tag ${getWhoClass(step.who)}">${step.who}</span>
+          <span class="cost-tag">${step.cost}</span>
+          <span class="status-tag ${getStatusClass(state)}">${getStatusLabel(state)}</span>
+        </div>
+        ${deadlineBadge}${dateBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function applyFilter() {
+  document.querySelectorAll('.step-item').forEach(el => {
+    el.style.display = shouldShow(el.dataset.state) ? '' : 'none';
+  });
+}
+function filterSteps(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilter();
+}
+function togglePhase(id) {
+  document.getElementById(`phase-${id}`).classList.toggle('collapsed');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER COSTS TAB
+// ══════════════════════════════════════════════════════════════════
+function renderCosts() {
+  const container = document.getElementById('cost-items-container');
+  container.innerHTML = '';
+  COST_SECTIONS.forEach(sec => {
+    const secTitle = document.createElement('div');
+    secTitle.className = 'cost-section-title';
+    secTitle.textContent = sec.label;
+    container.appendChild(secTitle);
+    sec.items.forEach(item => {
+      const v = actualCosts[item.id] || null;
+      const card = document.createElement('div');
+      card.className = 'cost-row-card';
+      card.innerHTML = `
+        <div class="cost-row-top">
+          <span class="cost-item-name">${item.name}</span>
+          <span class="cost-est">Est: ${item.est}</span>
+        </div>
+        <div class="cost-row-input">
+          <span class="actual-label">Actual paid:</span>
+          <span class="curr-prefix" id="pfx-${item.id}">${costCurr === 'AUD' ? 'AUD' : '₦'}</span>
+          <input class="actual-input" type="number" min="0" step="0.01"
+            id="inp-${item.id}"
+            placeholder="0.00"
+            value="${v !== null ? (costCurr === 'AUD' ? v : Math.round(v * exRate)) : ''}"
+            oninput="onCostInput('${item.id}', this.value)"
+            onfocus="this.select()">
+          <span class="converted-val" id="conv-${item.id}" data-cost-conv="${item.id}">
+            ${v ? (costCurr === 'AUD' ? '≈ ' + fmtNGN(v) : '≈ ' + fmtAUD(v)) : ''}
+          </span>
+        </div>`;
+      container.appendChild(card);
+    });
+  });
+  document.getElementById('rate-input').value = exRate;
+  updateCostTotals();
+}
+
+function onCostInput(id, rawVal) {
+  const num = parseFloat(rawVal);
+  if (isNaN(num) || num < 0) {
+    delete actualCosts[id];
+  } else {
+    // Store always in AUD
+    actualCosts[id] = costCurr === 'AUD' ? num : num / exRate;
+  }
+  saveCosts();
+  updateCostTotals();
+  updateSpentCard();
+}
+
+function onRateChange() {
+  const v = parseFloat(document.getElementById('rate-input').value);
+  if (v > 0) { exRate = v; saveRate(); }
+  updateCostTotals();
+  updateSpentCard();
+  refreshCostInputValues();
+}
+
+function refreshCostInputValues() {
+  COST_SECTIONS.forEach(sec => sec.items.forEach(item => {
+    const inp = document.getElementById(`inp-${item.id}`);
+    const pfx = document.getElementById(`pfx-${item.id}`);
+    const v   = actualCosts[item.id] || null;
+    if (inp) {
+      inp.value = v !== null ? (costCurr === 'AUD' ? parseFloat(v.toFixed(2)) : Math.round(v * exRate)) : '';
+    }
+    if (pfx) pfx.textContent = costCurr === 'AUD' ? 'AUD' : '₦';
+  }));
+}
+
+function setCostCurr(curr) {
+  costCurr = curr;
+  document.getElementById('cost-aud-btn').classList.toggle('active', curr === 'AUD');
+  document.getElementById('cost-ngn-btn').classList.toggle('active', curr === 'NGN');
+  refreshCostInputValues();
+  updateCostTotals();
+}
+
+function setTrackerCurr(curr) {
+  trackerCurr = curr;
+  document.getElementById('tracker-aud-btn').classList.toggle('active', curr === 'AUD');
+  document.getElementById('tracker-ngn-btn').classList.toggle('active', curr === 'NGN');
+  updateSpentCard();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════════════
+function openModal(stepId) {
+  let step;
+  PHASES.forEach(p => p.steps.forEach(s => { if (s.id === stepId) step = s; }));
+  if (!step) return;
+  modalStepId = stepId;
+  const state   = getStepState(stepId);
+  const savedDate = stepDates[stepId] || '';
+
+  document.getElementById('modal-title').textContent  = step.title;
+  document.getElementById('modal-detail').textContent = step.detail;
+  document.getElementById('modal-cost').textContent   = '💰 ' + step.cost;
+
+  // Explanation section
+  const explBox  = document.getElementById('modal-explanation');
+  const explBody = document.getElementById('modal-explanation-body');
+  if (step.explanation) {
+    explBody.innerHTML = step.explanation;
+    explBox.style.display = 'block';
+  } else {
+    explBox.style.display = 'none';
+  }
+
+  // Date row — show for done (edit existing) and for pending/active (pick date when marking done)
+  const dateRow   = document.getElementById('modal-date-row');
+  const dateInput = document.getElementById('modal-date-input');
+  dateRow.style.display = 'block';
+  dateInput.value = savedDate || todayISO();
+
+  const actions = document.getElementById('modal-actions');
+  if (state === 'done') {
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-danger" onclick="setStep('${stepId}','todo')">Mark Undone</button>`;
+  } else if (state === 'in-progress') {
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="setStep('${stepId}','todo')">Reset</button>
+      <button class="btn btn-primary" onclick="setStep('${stepId}','done')">✓ Confirm Done</button>`;
+  } else {
+    actions.innerHTML = `
+      <button class="btn btn-secondary" onclick="setStep('${stepId}','in-progress')">● Start</button>
+      <button class="btn btn-primary" onclick="setStep('${stepId}','done')">✓ Mark Done</button>`;
+  }
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal'))
+    document.getElementById('modal').classList.remove('open');
+}
+function setStep(id, state) {
+  setStepState(id, state);
+  if (state === 'done') {
+    // Save the date from the modal date picker
+    const dateInput = document.getElementById('modal-date-input');
+    stepDates[id] = dateInput ? dateInput.value : todayISO();
+    saveDates();
+    celebrate();
+  } else if (state === 'todo') {
+    // Clear the saved date when marking undone
+    delete stepDates[id];
+    saveDates();
+  }
+  document.getElementById('modal').classList.remove('open');
+  renderPhases();
+  updateOverall();
+}
+
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    const [y, m, d] = iso.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+  } catch(e) { return iso; }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════════════════════════
+function celebrate() {
+  const wrap = document.getElementById('confetti');
+  wrap.innerHTML = '';
+  wrap.style.display = 'block';
+  const colors = ['#10b981','#38bdf8','#f59e0b','#8b5cf6','#ef4444','#fbbf24'];
+  for (let i=0; i<40; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}%;top:${-10+Math.random()*-20}px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.5}s;animation-duration:${0.8+Math.random()*0.8}s;transform:rotate(${Math.random()*360}deg);border-radius:${Math.random()>0.5?'50%':'2px'};`;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => { wrap.style.display='none'; wrap.innerHTML=''; }, 2000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VIEWS
+// ══════════════════════════════════════════════════════════════════
+function switchView(view) {
+  document.querySelectorAll('.main-view').forEach(v => v.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.remove('hidden');
+  document.getElementById(`nav-${view}`).classList.add('active');
+  if (view === 'costs') renderCosts();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NOTES
+// ══════════════════════════════════════════════════════════════════
+function renderNotes() {
+  document.getElementById('notes-list').innerHTML = WARNINGS.map(w => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;">
+      <div style="font-size:22px;margin-bottom:6px;">${w.icon}</div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;">${w.title}</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;">${w.text}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+loadState();
+renderPhases();
+updateOverall();
+updateSpentCard();
+renderNotes();
+</script>
+</body>
+</html>
