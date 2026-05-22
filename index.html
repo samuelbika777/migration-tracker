@@ -30,6 +30,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
 
 /* ── HEADER ── */
 .app-header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 14px) 20px 14px}
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px;font-family:'Syne',sans-serif;}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sync-dot.synced{background:var(--teal);}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--coral);}
+.sync-dot.offline{background:var(--text3);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 .header-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .header-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-0.3px}
 .header-sub{font-size:12px;color:var(--text2);margin-top:2px;font-weight:300}
@@ -211,6 +218,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
     <div>
       <div class="header-title">🇦🇺 AU Migration</div>
       <div class="header-sub">Bika Family · IELTS Jul 2026 · OPRA Nov 2026 · Arr. Sep–Dec 2027</div>
+      <div class="sync-bar">
+        <div class="sync-dot syncing" id="sync-dot"></div>
+        <span id="sync-label" style="color:var(--text3)">Connecting…</span>
+      </div>
     </div>
     <div class="header-badge" id="overall-badge">0% Complete</div>
   </div>
@@ -494,22 +505,22 @@ let exRate      = 1650;
 let activeFilter = 'all';
 let modalStepId  = null;
 
-function loadState() {
-  try {
-    const s = localStorage.getItem('bika_v2_steps');
-    if (s) stepStates = JSON.parse(s);
-    const d = localStorage.getItem('bika_v2_dates');
-    if (d) stepDates = JSON.parse(d);
-    const c = localStorage.getItem('bika_v2_costs');
-    if (c) actualCosts = JSON.parse(c);
-    const r = localStorage.getItem('bika_v2_rate');
-    if (r) exRate = parseFloat(r) || 1650;
-  } catch(e) {}
+function setSyncStatus(status) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot) return;
+  dot.className   = 'sync-dot ' + status;
+  const labels    = { synced:'Synced · live', syncing:'Saving…', error:'Sync error', offline:'Offline' };
+  const colors    = { synced:'var(--teal)', syncing:'var(--amber)', error:'var(--coral)', offline:'var(--text3)' };
+  label.textContent  = labels[status] || '';
+  label.style.color  = colors[status] || 'var(--text3)';
 }
-function saveSteps() { try { localStorage.setItem('bika_v2_steps', JSON.stringify(stepStates)); } catch(e){} }
-function saveDates() { try { localStorage.setItem('bika_v2_dates', JSON.stringify(stepDates));  } catch(e){} }
-function saveCosts() { try { localStorage.setItem('bika_v2_costs', JSON.stringify(actualCosts)); } catch(e){} }
-function saveRate()  { try { localStorage.setItem('bika_v2_rate',  String(exRate)); } catch(e){} }
+
+function loadState() { /* handled by Firebase listener */ }
+function saveSteps() { console.log('saveSteps stub — Firebase not yet loaded'); }
+function saveDates() { console.log('saveDates stub — Firebase not yet loaded'); }
+function saveCosts() { console.log('saveCosts stub — Firebase not yet loaded'); }
+function saveRate()  { console.log('saveRate stub — Firebase not yet loaded'); }
 
 function getStepState(id) { return stepStates[id] || 'todo'; }
 function setStepState(id, state) { stepStates[id] = state; saveSteps(); }
@@ -915,13 +926,104 @@ function renderNotes() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// INIT
+// INIT — render static content; Firebase listener in second script block
 // ══════════════════════════════════════════════════════════════════
-loadState();
 renderPhases();
 updateOverall();
 updateSpentCard();
 renderNotes();
+
+// Listen to Firebase in real time — fires immediately on load and on any change from any device
+REF.on('value', snapshot => {
+  const data = snapshot.val() || {};
+  stepStates  = data.stepStates  || {};
+  stepDates   = data.stepDates   || {};
+  actualCosts = data.actualCosts || {};
+  exRate      = data.exRate      || 1650;
+
+  // Update exchange rate input if costs tab is visible
+  const rateInput = document.getElementById('rate-input');
+  if (rateInput) rateInput.value = exRate;
+
+  renderPhases();
+  updateOverall();
+  updateSpentCard();
+
+  // Refresh costs tab if currently open
+  const costsView = document.getElementById('view-costs');
+  if (costsView && !costsView.classList.contains('hidden')) renderCosts();
+
+  setSyncStatus('synced');
+}, error => {
+  setSyncStatus('error');
+  console.error('Firebase error:', error);
+});
+
+// Monitor connection state
+db.ref('.info/connected').on('value', snap => {
+  if (!snap.val()) setSyncStatus('offline');
+});
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+// Re-initialise Firebase after SDK loads
+(function() {
+  const firebaseConfig = { databaseURL: "https://bikaaustraliatracker-2f78f-default-rtdb.firebaseio.com" };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db2  = firebase.database();
+  const REF2 = db2.ref('migration_tracker');
+
+  function setSyncStatus2(status) {
+    const dot   = document.getElementById('sync-dot');
+    const label = document.getElementById('sync-label');
+    if (!dot) return;
+    dot.className  = 'sync-dot ' + status;
+    const labels   = { synced:'Synced · live', syncing:'Saving…', error:'Sync error', offline:'Offline' };
+    const colors   = { synced:'var(--teal)', syncing:'var(--amber)', error:'var(--coral)', offline:'var(--text3)' };
+    label.textContent = labels[status] || '';
+    label.style.color = colors[status] || 'var(--text3)';
+  }
+
+  REF2.on('value', snapshot => {
+    const data  = snapshot.val() || {};
+    stepStates  = data.stepStates  || {};
+    stepDates   = data.stepDates   || {};
+    actualCosts = data.actualCosts || {};
+    exRate      = data.exRate      || 1650;
+
+    const rateInput = document.getElementById('rate-input');
+    if (rateInput) rateInput.value = exRate;
+
+    renderPhases();
+    updateOverall();
+    updateSpentCard();
+
+    const costsView = document.getElementById('view-costs');
+    if (costsView && !costsView.classList.contains('hidden')) renderCosts();
+
+    setSyncStatus2('synced');
+  }, () => setSyncStatus2('error'));
+
+  db2.ref('.info/connected').on('value', snap => {
+    if (!snap.val()) setSyncStatus2('offline');
+  });
+
+  // Override save functions to use db2
+  window.saveSteps = function() {
+    setSyncStatus2('syncing');
+    REF2.child('stepStates').set(stepStates).then(()=>setSyncStatus2('synced')).catch(()=>setSyncStatus2('error'));
+  };
+  window.saveDates = function() {
+    setSyncStatus2('syncing');
+    REF2.child('stepDates').set(stepDates).then(()=>setSyncStatus2('synced')).catch(()=>setSyncStatus2('error'));
+  };
+  window.saveCosts = function() {
+    setSyncStatus2('syncing');
+    REF2.child('actualCosts').set(actualCosts).then(()=>setSyncStatus2('synced')).catch(()=>setSyncStatus2('error'));
+  };
+  window.saveRate = function() { REF2.child('exRate').set(exRate); };
+})();
 </script>
 </body>
 </html>
